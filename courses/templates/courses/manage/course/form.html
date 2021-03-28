@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}
+    <!-- if an object variable exist, then update -->
+    {% if object %}Update course "{{ object.title }}"
+        <!-- create new course -->
+    {% else %}Create a new course
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-md-11 col-lg-9 col-xl-8 mx-auto">
+                <div class="card mt-5">
+                    <div class="card-body shadow">
+                        <h3 class="card-title text-center">Course info</h3>
+                        <form method="post">
+                            {{ form|crispy }}
+                            {% csrf_token %}
+                            <input type="submit" value="Save course" class="btn btn-info btn-sm btn-block">
+                            <a href="{% url "manage_course_list" %}" class="btn btn-dark btn-sm btn-block">Back to
+                                home</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

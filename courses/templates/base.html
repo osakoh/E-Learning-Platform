@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="{% static 'css/all.css' %}">
+
+    <title>{% block title %}E-Platform{% endblock %}</title>
+
+    {#    <link href="{% static "css/base.css" %}" rel="stylesheet">#}
+</head>
+<body>
+<!-- navbar -->
+{% include '_partials/_navbar.html' %}
+<!-- navbar -->
+
+<!-- content block -->
+<div class="container">{% block content %}{% endblock %}</div>
+<!-- content block -->
+
+<!-- Footer -->
+{% include '_partials/_footer.html' %}
+<!-- footer -->
+
+{#<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>#}
+<!-- jquery -->
+<script src="{% static 'js/jquery-3.5.1.slim.min.js' %}"></script>
+<!-- jquery -->
+
+<!-- bootstrap -->
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<!-- bootstrap -->
+
+<!-- custom js -->
+<script src="{% static 'js/custom.js' %}"></script>
+<!-- custom js -->
+
+<script>
+    $(document).ready(function () {
+        {% block domready %}
+        {% endblock %}
+    });
+</script>
+
+</body>
+</html>

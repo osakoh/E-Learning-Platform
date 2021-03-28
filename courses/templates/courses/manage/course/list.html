@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}My courses{% endblock %}
+{% block content %}
+
+    <div class="container">
+        <p class="pt-3 h1 text-capitalize">My courses</p>
+        <div class="row pt-4">
+            <div class="col-sm-12 col-md-11 col-lg-10 col-xl-11 mx-auto">
+
+                {% for course in courses %}
+                    <div class="card shadow mb-3" style="width: 70%;">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ course.title|truncatewords:6|linebreaks }}</h5>
+                            <span class="d-flex justify-content-between">
+                            <a href="{% url "course_edit" course.id %}" class="text-dark">Edit<i
+                                    class="far fa-edit"></i></a>
+                            <a href="{% url "course_delete" course.id %}">Delete<i
+                                    class="fas fa-backspace text-danger"></i></a>
+                        </span>
+                        </div>
+                    </div>
+                {% empty %}
+                    <p>You haven't created any courses yet.</p>
+                {% endfor %}
+                <p class="pt-3">
+                    <a href="{% url "course_create" %}" class="btn btn-outline-dark btn-sm">Create new course&nbsp;<i
+                            class="far fa-plus-square"></i></a>
+                </p>
+            </div>
+        </div>
+    </div>
+{% endblock %}
