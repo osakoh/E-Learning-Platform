@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+<!-- this formset page is used for CREATING and UPDATING -->
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if course %}
+        Update&colon;&nbsp;{{ course.title }}
+    {% else %}
+        Add Module(s) for {{ course.title }}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12 col-md-11 col-lg-9 col-xl-8 mx-auto">
+                <div class="card mt-5">
+                    <div class="card-body shadow">
+                        <h3 class="card-title text-center">{{ course.title }}</h3>
+                        <form method="post" id="moduleFormset">
+
+                            {% csrf_token %}
+                            {{ formset.management_form }}
+                            {#                            {{ formset|crispy }}#}
+                            {% for form in formset %}
+                                <div class="moduleNewForm mb-3">
+                                    {{ form|crispy }}
+                                    {#                                    <div id="itemDelete"></div>#}
+                                    <!-- delete form -->
+                                    <a class="btn btn-dark btn-sm mb-2 deleteForm" id="">Delete form</a>
+                                    <!-- delete form -->
+                                </div>
+                            {% endfor %}
+
+                            <!-- links -->
+                            <div class="py-1" id="add_form_before">
+                                <!-- button to add new form -->
+                                <a class="btn btn-outline-info btn-sm btn-block mb-2" id="add-form" role="button">
+                                    Add new module form
+                                </a>
+                                <!-- button to add new form -->
+
+                                <!-- update course -->
+                                {% if course %}
+                                    <input type="submit" value="Update module"
+                                           class="btn btn-success btn-sm btn-block mb-2">
+                                {% else %}
+                                    <!-- create new course -->
+                                    <input type="submit" value="New module"
+                                           class="btn btn-success btn-sm btn-block mb-2">
+                                {% endif %}
+                                <!-- course edit link -->
+                                <a href="{% url "course_edit" course.id %}"
+                                   class="btn btn-outline-primary btn-sm btn-block mb-2">Course Edit
+                                </a>
+                                <!-- course edit link -->
+                                <!-- back to course list -->
+                                <a href="{% url "manage_course_list" %}" class="btn btn-dark btn-sm btn-block mb-2">
+                                    Back to course list
+                                </a>
+                                <!-- back to course list -->
+                                <!-- links -->
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // call countForms
+        countForms();
+        {#let currentFormCount = countForms();#}
+        {#console.log(currentFormCount)#}
+
+        function countForms() {
+            const get_forms = document.querySelectorAll(".checkboxinput.form-check-input")
+            const deleteButtons = document.querySelectorAll(".deleteForm");
+
+            {#deleteButtons.forEach(function (deleteButton) {#}
+            {#    deleteButton.id = `${1}`;#}
+            {#    console.log(deleteButton)#}
+            {#  }); #}
+            for (let i = 0; i < deleteButtons.length; i++) {
+            }
+
+        }
+
+        // initialise variables to clone form
+        let createModuleNewForm = document.querySelectorAll(".moduleNewForm");
+        let mainModuleFormset = document.querySelector("#moduleFormset");
+        let addButton = document.querySelector("#add-form");
+        let totalForms = document.querySelector("#id_modules-TOTAL_FORMS");
+        const addBefore = document.getElementById('add_form_before');
+        // delete form id
+        {#let deleteForm = document.getElementById('deleteForm')#}
+        // set dynamic id to each delete form
+
+
+        // Get the number of the last form on the page with zero-based indexing
+        if (document.getElementById('add-form')) {
+            let formNum = createModuleNewForm.length - 1
+            // add a click eventlistener to the add button
+            addButton.addEventListener('click', addForm);
+            // add event to scroll to the bottom of the page when the 'New module form' button is clicked
+            addButton.addEventListener('click', scrollToBottom);
+            // add event to delete a form when the 'delete form' button is clicked
+            {#deleteForm.addEventListener('click', deleteFormMethod);#}
+
+            // function to add new buildup forms
+            function addForm(e) {
+                e.preventDefault();
+
+                //Clone the buildup form
+                let newForm = createModuleNewForm[0].cloneNode(true)
+                //Regex to find all instances of the form number
+                let formRegex = RegExp(`modules-(\\d){1}-`, 'g')
+                //Increment the form number
+                formNum++ //Increment the form number
+                //Update the new form to have the correct form number
+                newForm.innerHTML = newForm.innerHTML.replace(formRegex, `modules-${formNum}-`)
+                //Insert the new form at the end of the list of forms
+                mainModuleFormset.insertBefore(newForm, addBefore)
+                //Increment the number of total forms in the management form
+                totalForms.setAttribute('value', `${formNum + 1}`)
+                // call countForms
+                countForms();
+
+            }
+
+            // function to scroll to the bottom of the page when the 'NEW LAYER' button is clicked
+            function scrollToBottom() {
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+
+            // function to delete a form
+            function deleteFormMethod(e) {
+                e.preventDefault();
+
+
+                console.log("Delete form");
+            }
+        }
+
+    </script>
+
+
+{% endblock %}
+
+<!-- javascript -->
+{#{% block domready %}#}
+{#    console.log(3)#}
+{#{% endblock %}#}
+<!-- javascript -->

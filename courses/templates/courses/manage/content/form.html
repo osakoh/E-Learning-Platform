@@ -4,9 +4,9 @@
 
 {% block title %}
     {#    <!-- if an object variable exist, then update -->#}
-    {% if object %}Update course | {{ object.title }}
-        {#        <!-- create new course -->#}
-    {% else %}Create a new course
+    {% if object %}Update content | {{ object.title }}
+        {#        <!-- create new content -->#}
+    {% else %}Create content
     {% endif %}
 {% endblock %}
 
@@ -16,16 +16,23 @@
         <div class="row">
             <div class="col-sm-12 col-md-11 col-lg-9 col-xl-8 mx-auto">
                 <div class="card mt-5">
+                    <h3 class="card-header text-center">
+                        {% if object %}
+                            Update content&#58;&nbsp;{{ object.title }}
+                        {% else %}
+                            New content
+                        {% endif %}
+                    </h3>
                     <div class="card-body shadow">
                         <h3 class="card-title text-center">Course info</h3>
-                        <form method="post">
+                        <form method="post" enctype="multipart/form-data">
                             {{ form|crispy }}
                             {% csrf_token %}
                             <!-- update course -->
                             {% if object %}
-                                <input type="submit" value="Update course" class="btn btn-info btn-sm btn-block">
+                                <input type="submit" value="Update content" class="btn btn-info btn-sm btn-block">
                             {% else %} <!-- create new course -->
-                                <input type="submit" value="New course" class="btn btn-info btn-sm btn-block">
+                                <input type="submit" value="New content" class="btn btn-info btn-sm btn-block">
                             {% endif %}
 
                             <!-- back to course list -->

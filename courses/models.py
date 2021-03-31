@@ -99,8 +99,8 @@ class ItemBase(models.Model):
 
 class Text(ItemBase):
     """
-    Text inherits from/is a subclass of the ItemBase model. Meaning it has the following fields(owner, title, created, updated)
-    by default along with its content field.
+    Text inherits from/is a subclass of the ItemBase model. Meaning it has the following
+    fields(owner, title, created, updated) by default along with its content field.
     """
     content = models.TextField()
 

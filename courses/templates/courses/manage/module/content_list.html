@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% load course %}
+
+{% block title %}
+    Module {{ module.order|add:1 }}: {{ module.title }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        {% with course=module.course %}
+            <h3 class="card-title text-center p-2">Course&colon;&nbsp;{{ course.title }}</h3>
+            <!-- Module list -->
+            <div class="row">
+                <div class="col-4 bg-dark text-white p-1">
+                    <h4 class="text-center text-white p-1">Modules</h4>
+                    <ul class="list-group" id="modules">
+                        {% for m in course.modules.all %}
+                            {#                            {% if m == module %}class="list-group-item list-group-item-action list-group-item-light"#}
+                            {#                                #}
+                            {#                            {% endif %}>#}
+                            <li
+                                    {% if m == module %}class="list-group-item list-group-item-action list-group-item-dark"
+                                    {% else %}
+                                    class="list-group-item text-dark"
+                                    {% endif %}
+
+                                    data-id="{{ m.id }}">
+                                <a href="{% url "module_content_list" m.id %}">
+                                  <span class="text-capitalize">
+                                    Module <span class="order">{{ m.order|add:1 }}</span>
+                                  </span><br>
+                                    {{ m.title }}
+                                </a>
+                            </li>
+
+                            {#                            <li data-id="{{ m.id }}"#}
+                            {#                                {% if m == module %}class="list-group-item list-group-item-action list-group-item-light" {% endif %}>#}
+                            {#                                <a href="{% url "module_content_list" m.id %}">#}
+                            {#                                  <span class="text-capitalize">#}
+                            {#                                    Module <span class="order">{{ m.order|add:1 }}</span>#}
+                            {#                                  </span><br>#}
+                            {#                                    {{ m.title }}#}
+                            {#                                </a>#}
+                            {#                            </li>#}
+                        {% empty %}
+                            <li>No modules yet.</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="pt-3 p-1">
+                        <a class="text-dark bg-secondary btn btn-sm btn-block btn-outline-info mb-2"
+                           href="{% url "course_module_update" course.id %}">Edit modules
+                            <i class="far fa-edit"></i>
+                        </a>
+
+                        <!-- back to course list -->
+                        <a class="text-dark bg-secondary btn btn-sm btn-block btn-outline-info mb-2"
+                           href="{% url "manage_course_list" %}">
+                            Back to course list
+                        </a>
+                        <!-- back to course list -->
+                    </div>
+                </div>
+                <!-- Module list -->
+
+                <!-- Module contents -->
+                <div class="col-8">
+                    <div class="module p-1">
+                        <h5 class="card-title pb-1">Module {{ module.order|add:1 }}: {{ module.title }}</h5>
+                        <h6 class="card-title text-center">Module contents&colon;</h6>
+
+                        <div style="cursor: move;">
+                            {% for content in module.contents.all %}
+                                <div class="p-2 border border-dark mb-3" data-id="{{ content.id }}">
+                                    {% with item=content.item %}
+                                        <p>{{ item }} ({{ item|model_name }})</p>
+                                        <a role="button"
+                                           class="text-white btn btn-sm mb-2 ms-3 ms-2 btn-link btn-dark text-white"
+                                           href="{% url "module_content_update" module.id item|model_name item.id %}">
+                                            Edit
+                                        </a>
+                                        <form class="float-right" action="{% url "module_content_delete" content.id %}"
+                                              method="post">
+                                            <input class="text-danger" type="submit" value="Delete">
+                                            {% csrf_token %}
+                                        </form>
+                                    {% endwith %}
+                                </div>
+                            {% empty %}
+                                <p class="border border-dark p-1 text-center pt-2 pb-2">This module has no contents
+                                    yet.</p>
+                            {% endfor %}
+                        </div>
+                        <h3>Add new content:</h3>
+                        <div class="pt-2">
+                            <a role="button" class="btn btn-sm mb-2 ms-3 ms-2 btn-link btn-info text-white"
+                               href="{% url "module_content_create" module.id "text" %}">
+                                Text</a>
+                            <a role="button" class="btn btn-sm mb-2 ms-3 ms-2 btn-link btn-info text-white"
+                               href="{% url "module_content_create" module.id "image" %}">
+                                Image</a>
+                            <a role="button" class="btn btn-sm mb-2 ms-3 ms-2 btn-link btn-info text-white"
+                               href="{% url "module_content_create" module.id "video" %}">
+                                Video</a>
+                            <a role="button" class="btn btn-sm mb-2 ms-3 ms-2 btn-link btn-info text-white"
+                               href="{% url "module_content_create" module.id "file" %}">
+                                File</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            </div>
+
+        {% endwith %}
+{% endblock %}
+
+{#{% block domready %}#}
+{#    $('#modules').sortable({#}
+{#    stop: function(event, ui) {#}
+{#    modules_order = {};#}
+{#    $('#modules').children().each(function(){#}
+{#    // update the order field#}
+{#    $(this).find('.order').text($(this).index() + 1);#}
+{#    // associate the module's id with its order#}
+{#    modules_order[$(this).data('id')] = $(this).index();#}
+{#    });#}
+{#    $.ajax({#}
+{#    type: 'POST',#}
+{#    url: '{% url "module_order" %}',#}
+{#    contentType: 'application/json; charset=utf-8',#}
+{#    dataType: 'json',#}
+{#    data: JSON.stringify(modules_order)#}
+{#    });#}
+{#    }#}
+{#    });#}
+{##}
+{#    $('#module-contents').sortable({#}
+{#    stop: function(event, ui) {#}
+{#    contents_order = {};#}
+{#    $('#module-contents').children().each(function(){#}
+{#    // associate the module's id with its order#}
+{#    contents_order[$(this).data('id')] = $(this).index();#}
+{#    });#}
+{##}
+{#    $.ajax({#}
+{#    type: 'POST',#}
+{#    url: '{% url "content_order" %}',#}
+{#    contentType: 'application/json; charset=utf-8',#}
+{#    dataType: 'json',#}
+{#    data: JSON.stringify(contents_order),#}
+{#    });#}
+{#    }#}
+{#    });#}
+{#{% endblock %}#}

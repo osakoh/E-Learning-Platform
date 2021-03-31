@@ -1,12 +1,17 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
+
+from django.forms.models import modelform_factory
+from django.apps import apps
 
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.base import TemplateResponseMixin, View
 
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
-from .models import Course
+from .models import Course, Module, Content
+from .forms import ModuleFormSet
 
 """
 Mixin: a type of multiple inheritance for a 'class'.
@@ -134,3 +139,162 @@ class CourseDeleteView(OwnerCourseMixin, DeleteView):
     """
     template_name = 'courses/manage/course/delete.html'
     permission_required = 'courses.delete_course'
+
+
+# *********************************************** Course Module *******************************************************
+class CourseModuleUpdateView(TemplateResponseMixin, View):
+    """
+    CourseModuleUpdateView: inherits from 'TemplateResponseMixin & View'.
+        it handles the formset to add, update, and delete modules for a specific course
+
+    TemplateResponseMixin: renders templates and returns an HTTP response.
+        Requires 'template_name' attribute and the 'render_to_response()'
+    View: a simple parent class for all views(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'])
+    """
+    template_name = 'courses/manage/module/formset.html'
+    course = None
+
+    def get_formset(self, data=None):
+        """
+        data: is optional and set to None, because get_formset is used as a base for either get / post request i.e to
+        avoid repeating the code to build the formset
+        This assigns a course instance to every ModuleFormset
+        """
+        return ModuleFormSet(instance=self.course, data=data)
+
+    def dispatch(self, request, pk):
+        """
+        dispatch(): takes an HTTP request and delegates a lowercase method (get/post) that matches the HTTP method used
+        retrieves the current Course id belonging to the current user(owner=request.user), this makes it impossible
+        to change the id to view another user's form.
+        """
+        self.course = get_object_or_404(Course, id=pk, owner=request.user)
+        return super().dispatch(request, pk)
+
+    def get(self, request, *args, **kwargs):
+        """
+        get: for creating a new Formset
+        self.get_formset(): gets a fresh formset with no data
+        render_to_response: passes the context i.e Course instance(self.course) and formset(formset)
+        """
+        formset = self.get_formset()
+        return self.render_to_response({'course': self.course, 'formset': formset})
+
+    def post(self, request, *args, **kwargs):
+        """
+        self.get_formset(): gets a fresh formset with no data and then pass the Post request as the data
+            saves the formset if valid and redirects to the Course list(manage_course_list); If the formset is not valid,
+            render the template to display errors.
+        render_to_response: passes the context i.e Course instance(self.course) and formset(formset)
+        """
+        formset = self.get_formset(data=request.POST)
+        if formset.is_valid():
+            formset.save()
+            return redirect('manage_course_list')
+        return self.render_to_response({'course': self.course, 'formset': formset})
+
+
+# *********************************************** Course Module *******************************************************
+
+# ********************************************** Module content ******************************************************
+class ContentCreateUpdateView(TemplateResponseMixin, View):
+    """
+    TemplateResponseMixin: renders templates and returns an HTTP response.
+        Requires 'template_name' attribute and the 'render_to_response()'
+
+    View: a simple parent class for all views(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'])
+    """
+    module = None
+    model = None
+    obj = None
+    template_name = 'courses/manage/content/form.html'
+
+    def get_model(self, model_name):
+        """
+        model_name: retrieves the app in which the models would be generated dynamically
+        """
+        if model_name in ['text', 'video', 'image', 'file']:  # check if the model name is in this list
+            # use Django apps module to get the app and the class
+            return apps.get_model(app_label='courses', model_name=model_name)
+        return None  # return None if the model name is not in the list defined above
+
+    def get_form(self, model, *args, **kwargs):
+        """
+        model: current model used to generate a modelform
+        modelform_factory: generates model form classes dynamically,
+        i.e you don't need to define a model form every time you register a model in the Django admin
+        """
+        Form = modelform_factory(model, exclude=['owner', 'order', 'created', 'updated'])
+        return Form(*args, **kwargs)
+
+    def dispatch(self, request, module_id, model_name, id=None):
+        """
+
+        dispatch(): takes an HTTP request and delegates a lowercase method (get/post) that matches the HTTP method used
+        :param module_id: the Module ID in which the content would be associated with
+        :param model_name: the model name of the content to create/update
+        :param id: ID of the object being updated, if no ID(id=None), then a new object will be created
+        """
+        self.module = get_object_or_404(Module, id=module_id, course__owner=request.user)
+        self.model = self.get_model(model_name)
+
+        if id:
+            self.obj = get_object_or_404(self.model, id=id, owner=request.user)
+        return super().dispatch(request, module_id, model_name, id)
+
+    def get(self, request, module_id, model_name, id=None):
+        """
+        get: executed when a GET request is received; used to view a 'detailed' page of an object
+        render_to_response: passes the context i.e form instance(form) and the object being viewed(self.obj)
+        """
+        form = self.get_form(self.model, instance=self.obj)
+        return self.render_to_response({'form': form, 'object': self.obj})
+
+    def post(self, request, module_id, model_name, id=None):
+        """
+        self.get_form(): gets a fresh form with no data, receives the submitted data(data=request.POST) and
+        files(files=request.FILES)
+        render_to_response: passes the context i.e form instance(form) and object being created/updated(self.obj)
+        """
+        form = self.get_form(self.model, instance=self.obj, data=request.POST, files=request.FILES)
+
+        if form.is_valid():  # checks if the form is valid for 'updating'
+            obj = form.save(commit=False)  # if valid, assigned the validated form to 'obj'
+            # then assign the parent class to the child class i.e assign the current user as the owner
+            obj.owner = request.user
+            obj.save()  # then save to DB
+            if not id:  # if no ID was found, it means a new Content is to be created
+                # new content is created with the current module(self.module) and its item(Text/file/image/video)
+                Content.objects.create(module=self.module, item=obj)
+            return redirect('module_content_list', self.module.id)  # return to the course list
+
+        return self.render_to_response({'form': form, 'object': self.obj})  # show empty form if no data was supplied
+
+
+class ContentDeleteView(View):
+    """
+    View: a simple parent class for all views(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'])
+    """
+
+    def post(self, request, id):
+        content = get_object_or_404(Content, id=id, module__course__owner=request.user)
+        module = content.module  # get the module content to be deleted and store in variable module
+        content.item.delete()  # delete the related(pk to module) object i.e (Text/Video/Image/File)
+        content.delete()  # the delete the content itself
+        return redirect('module_content_list', module.id)
+
+
+class ModuleContentListView(TemplateResponseMixin, View):
+    """
+    TemplateResponseMixin: renders templates and returns an HTTP response.
+        Requires 'template_name' attribute and the 'render_to_response()'
+
+    View: a simple parent class for all views(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'])
+    """
+    template_name = 'courses/manage/module/content_list.html'
+
+    def get(self, request, module_id):  # get the module associated to the current logged in user
+        module = get_object_or_404(Module, id=module_id, course__owner=request.user)
+        # pass the module to 'content_list' page through the context(self.render_to_response)
+        return self.render_to_response({'module': module})
+# ********************************************** Module content ******************************************************
