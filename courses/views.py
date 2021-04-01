@@ -8,6 +8,8 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic.base import TemplateResponseMixin, View
 
+from braces.views import CsrfExemptMixin, JsonRequestResponseMixin
+
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import Course, Module, Content
@@ -288,7 +290,6 @@ class ModuleContentListView(TemplateResponseMixin, View):
     """
     TemplateResponseMixin: renders templates and returns an HTTP response.
         Requires 'template_name' attribute and the 'render_to_response()'
-
     View: a simple parent class for all views(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'])
     """
     template_name = 'courses/manage/module/content_list.html'
@@ -297,4 +298,43 @@ class ModuleContentListView(TemplateResponseMixin, View):
         module = get_object_or_404(Module, id=module_id, course__owner=request.user)
         # pass the module to 'content_list' page through the context(self.render_to_response)
         return self.render_to_response({'module': module})
+
+
+class ModuleOrderView(CsrfExemptMixin, JsonRequestResponseMixin, View):
+    """
+    CsrfExemptMixin: this stops Django from checking for the cross-site request forgery(CSRF) token in a POST request
+    JsonRequestResponseMixin: parses request and response data as JSON and returns an
+        HTTP response with application/json as the content type.
+    View: a simple parent class for all views(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'])
+    """
+
+    def post(self, request):
+        # retrieves id & order from the json request
+        for id, order in self.request_json.items():
+            # filter the Module based on the id, assign the current user as the owner
+            # and update the order based on the order in the post request
+            Module.objects.filter(id=id, course__owner=request.user).update(order=order)
+            print(f"ModuleOrderView: id:{id} - Order:{order}\n")
+            # return a jsons request as OK
+        return self.render_json_response({'saved': 'OK'})
+
+
+class ContentOrderView(CsrfExemptMixin, JsonRequestResponseMixin, View):
+    """
+    CsrfExemptMixin: this stops Django from checking for the cross-site request forgery(CSRF) token in a POST request
+    JsonRequestResponseMixin: parses request and response data as JSON and returns an
+        HTTP response with application/json as the content type.
+    View: a simple parent class for all views(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace'])
+    """
+
+    def post(self, request):
+        # retrieves id & order from the json request
+        for id, order in self.request_json.items():
+            # filter the Content based on the id, assign the current user as the owner
+            # and update the order based on the order in the post request
+            Content.objects.filter(id=id, module__course__owner=request.user).update(order=order)
+            print(f"ModuleOrderView: id:{id} - Order:{order}\n")
+            # return a jsons request as OK
+        return self.render_json_response({'saved': 'OK'})
+
 # ********************************************** Module content ******************************************************

@@ -11,7 +11,7 @@
     <div class="container-fluid">
 
         {% with course=module.course %}
-            <h3 class="card-title text-center p-2">Course&colon;&nbsp;{{ course.title }}</h3>
+            <h3 class="card-header p-3 mb-3 container-fluid">Course&colon;&nbsp;{{ course.title }}</h3>
             <!-- Module list -->
             <div class="row">
                 <div class="col-4 bg-dark text-white p-1">
@@ -68,10 +68,10 @@
                 <!-- Module contents -->
                 <div class="col-8">
                     <div class="module p-1">
-                        <h5 class="card-title pb-1">Module {{ module.order|add:1 }}: {{ module.title }}</h5>
+                        <h4 class="card-title pb-1 text-dark">Module {{ module.order|add:1 }}: {{ module.title }}</h4>
                         <h6 class="card-title text-center">Module contents&colon;</h6>
 
-                        <div style="cursor: move;">
+                        <div id="module-contents" style="cursor: move;">
                             {% for content in module.contents.all %}
                                 <div class="p-2 border border-dark mb-3" data-id="{{ content.id }}">
                                     {% with item=content.item %}
@@ -117,41 +117,42 @@
         {% endwith %}
 {% endblock %}
 
-{#{% block domready %}#}
-{#    $('#modules').sortable({#}
-{#    stop: function(event, ui) {#}
-{#    modules_order = {};#}
-{#    $('#modules').children().each(function(){#}
-{#    // update the order field#}
-{#    $(this).find('.order').text($(this).index() + 1);#}
-{#    // associate the module's id with its order#}
-{#    modules_order[$(this).data('id')] = $(this).index();#}
-{#    });#}
-{#    $.ajax({#}
-{#    type: 'POST',#}
-{#    url: '{% url "module_order" %}',#}
-{#    contentType: 'application/json; charset=utf-8',#}
-{#    dataType: 'json',#}
-{#    data: JSON.stringify(modules_order)#}
-{#    });#}
-{#    }#}
-{#    });#}
-{##}
-{#    $('#module-contents').sortable({#}
-{#    stop: function(event, ui) {#}
-{#    contents_order = {};#}
-{#    $('#module-contents').children().each(function(){#}
-{#    // associate the module's id with its order#}
-{#    contents_order[$(this).data('id')] = $(this).index();#}
-{#    });#}
-{##}
-{#    $.ajax({#}
-{#    type: 'POST',#}
-{#    url: '{% url "content_order" %}',#}
-{#    contentType: 'application/json; charset=utf-8',#}
-{#    dataType: 'json',#}
-{#    data: JSON.stringify(contents_order),#}
-{#    });#}
-{#    }#}
-{#    });#}
-{#{% endblock %}#}
+{% block domready %}
+    $('#modules').sortable({
+    stop: function(event, ui) {
+    modules_order = {};
+    $('#modules').children().each(function(){
+    // update the order field
+    $(this).find('.order').text($(this).index() + 1);
+    // associate the module's id with its order
+    modules_order[$(this).data('id')] = $(this).index();
+    });
+    $.ajax({
+    type: 'POST',
+    url: '{% url "module_order" %}',
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json',
+    data: JSON.stringify(modules_order)
+    });
+    }
+    });
+
+    $('#module-contents').sortable({
+    stop: function(event, ui) {
+    contents_order = {};
+    $('#module-contents').children().each(function(){
+    // associate the module's id with its order
+    contents_order[$(this).data('id')] = $(this).index();
+    });
+
+    $.ajax({
+    type: 'POST',
+    url: '{% url "content_order" %}',
+    contentType: 'application/json; charset=utf-8',
+    dataType: 'json',
+    data: JSON.stringify(contents_order),
+    });
+    }
+    });
+
+{% endblock %}
